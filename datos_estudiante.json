@@ -1,0 +1,16 @@
+{
+  "Miguel": {
+    "registros_diarios": {
+      "2025-10-16": {
+        "sueno": "8",
+        "comidas": "",
+        "agua": "5",
+        "ejercicio": "30",
+        "estres": 7,
+        "estudio": "4",
+        "notas": "nada"
+      }
+    },
+    "historial_recetas": []
+  }
+}
