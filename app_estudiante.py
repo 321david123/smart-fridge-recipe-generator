@@ -252,108 +252,179 @@ class AplicacionEstudiante(ctk.CTk):
         
         return frame
     
+    def calcular_porcentaje_metrica(self, valor, objetivo, es_inverso=False):
+        """Calcular porcentaje basado en objetivo (0-100%)"""
+        if valor is None or valor == 0:
+            return 0
+        
+        if es_inverso:  # Para estrés (menos es mejor)
+            porcentaje = max(0, 100 - (valor / objetivo * 100))
+        else:
+            porcentaje = min(100, (valor / objetivo * 100))
+        
+        return round(porcentaje)
+    
+    def obtener_color_porcentaje(self, porcentaje):
+        """Obtener color según porcentaje"""
+        if porcentaje >= 75:
+            return "#22c55e"  # Verde
+        elif porcentaje >= 50:
+            return "#f59e0b"  # Naranja
+        else:
+            return "#ef4444"  # Rojo
+    
     def crear_dashboard(self):
-        """Crear dashboard con gráficas de la semana"""
+        """Crear dashboard con gráficas circulares y progreso semanal"""
         # Limpiar dashboard
         for widget in self.dashboard_frame.winfo_children():
             widget.destroy()
         
-        # Título del dashboard
-        titulo_dash = ctk.CTkLabel(
-            self.dashboard_frame,
-            text="📊 Tu Semana de Bienestar",
-            font=ctk.CTkFont(size=22, weight="bold")
-        )
-        titulo_dash.pack(pady=(15, 10))
+        # Obtener datos de hoy
+        fecha_hoy = date.today().isoformat()
+        datos_hoy = {}
         
-        # Obtener datos de la última semana
-        datos_semana = self.obtener_datos_semana()
+        if self.nombre_usuario in self.datos_usuario:
+            datos_hoy = self.datos_usuario[self.nombre_usuario]["registros_diarios"].get(fecha_hoy, {})
         
-        if not datos_semana["fechas"]:
-            # No hay datos
+        # Si no hay datos de hoy
+        if not datos_hoy:
             label_sin_datos = ctk.CTkLabel(
                 self.dashboard_frame,
-                text="📝 Aún no tienes registros. ¡Empieza a registrar tu día!",
-                font=ctk.CTkFont(size=16),
+                text="📝 No hay datos de hoy. ¡Registra tu día para ver tu progreso!",
+                font=ctk.CTkFont(size=18, weight="bold"),
                 text_color="gray"
             )
-            label_sin_datos.pack(pady=50)
+            label_sin_datos.pack(pady=80)
             return
         
-        # Frame para las gráficas
-        graficas_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="transparent")
-        graficas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 15))
+        # Título
+        titulo_dash = ctk.CTkLabel(
+            self.dashboard_frame,
+            text=f"📊 Tu Progreso de Hoy - {datetime.now().strftime('%d de %B')}",
+            font=ctk.CTkFont(size=20, weight="bold")
+        )
+        titulo_dash.pack(pady=(15, 5))
         
-        # Configurar matplotlib con tema oscuro
+        # Frame superior: Gráficas circulares
+        donuts_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="transparent")
+        donuts_frame.pack(fill="x", padx=20, pady=10)
+        
+        # Configurar matplotlib
         plt.style.use('dark_background')
         
-        # Crear figura con 4 subplots
-        fig = Figure(figsize=(12, 4), facecolor='#2b2b2b')
+        # Crear figura con 4 gráficas circulares
+        fig = Figure(figsize=(12, 3), facecolor='#2b2b2b')
         
-        # 1. Gráfica de Sueño
-        ax1 = fig.add_subplot(141)
-        ax1.plot(datos_semana["fechas_cortas"], datos_semana["sueno"], 
-                marker='o', linewidth=2, markersize=8, color='#3b82f6')
-        ax1.set_title('💤 Sueño (horas)', fontsize=10, fontweight='bold')
-        ax1.set_ylim(0, 12)
-        ax1.grid(True, alpha=0.3)
-        ax1.tick_params(labelsize=8)
+        # Objetivos diarios
+        objetivos = {
+            "sueno": 8,      # 8 horas = 100%
+            "agua": 8,       # 8 vasos = 100%
+            "ejercicio": 30, # 30 min = 100%
+            "estudio": 6,    # 6 horas = 100%
+            "estres": 10     # 10 es máximo (menos es mejor)
+        }
         
-        # 2. Gráfica de Agua
-        ax2 = fig.add_subplot(142)
-        ax2.bar(datos_semana["fechas_cortas"], datos_semana["agua"], color='#10b981', alpha=0.8)
-        ax2.set_title('💧 Agua (vasos)', fontsize=10, fontweight='bold')
-        ax2.set_ylim(0, 12)
-        ax2.grid(True, alpha=0.3, axis='y')
-        ax2.tick_params(labelsize=8)
+        # Obtener valores de hoy
+        valores = {
+            "sueno": float(datos_hoy.get("sueno", 0) or 0),
+            "agua": float(datos_hoy.get("agua", 0) or 0),
+            "ejercicio": float(datos_hoy.get("ejercicio", 0) or 0),
+            "estudio": float(datos_hoy.get("estudio", 0) or 0),
+            "estres": int(datos_hoy.get("estres", 5))
+        }
         
-        # 3. Gráfica de Estrés
-        ax3 = fig.add_subplot(143)
-        colores_estres = ['#22c55e' if e <= 3 else '#f59e0b' if e <= 6 else '#ef4444' 
-                         for e in datos_semana["estres"]]
-        ax3.bar(datos_semana["fechas_cortas"], datos_semana["estres"], 
-               color=colores_estres, alpha=0.8)
-        ax3.set_title('😰 Estrés (1-10)', fontsize=10, fontweight='bold')
-        ax3.set_ylim(0, 10)
-        ax3.grid(True, alpha=0.3, axis='y')
-        ax3.tick_params(labelsize=8)
+        # Calcular porcentajes
+        porcentajes = {
+            "sueno": self.calcular_porcentaje_metrica(valores["sueno"], objetivos["sueno"]),
+            "agua": self.calcular_porcentaje_metrica(valores["agua"], objetivos["agua"]),
+            "ejercicio": self.calcular_porcentaje_metrica(valores["ejercicio"], objetivos["ejercicio"]),
+            "estudio": self.calcular_porcentaje_metrica(valores["estudio"], objetivos["estudio"]),
+            "estres": self.calcular_porcentaje_metrica(valores["estres"], objetivos["estres"], es_inverso=True)
+        }
         
-        # 4. Gráfica de Estudio
-        ax4 = fig.add_subplot(144)
-        ax4.plot(datos_semana["fechas_cortas"], datos_semana["estudio"], 
-                marker='s', linewidth=2, markersize=8, color='#f59e0b')
-        ax4.set_title('📚 Estudio (horas)', fontsize=10, fontweight='bold')
-        ax4.set_ylim(0, max(datos_semana["estudio"] + [8]))
-        ax4.grid(True, alpha=0.3)
-        ax4.tick_params(labelsize=8)
+        metricas = [
+            ("💤 Sueño", porcentajes["sueno"], f"{valores['sueno']:.1f}h", "#3b82f6"),
+            ("💧 Agua", porcentajes["agua"], f"{int(valores['agua'])} vasos", "#10b981"),
+            ("🏃 Ejercicio", porcentajes["ejercicio"], f"{int(valores['ejercicio'])} min", "#8b5cf6"),
+            ("📚 Estudio", porcentajes["estudio"], f"{valores['estudio']:.1f}h", "#f59e0b")
+        ]
         
-        fig.tight_layout()
+        for i, (titulo, porcentaje, valor, color_base) in enumerate(metricas):
+            ax = fig.add_subplot(1, 4, i + 1)
+            
+            # Color según rendimiento
+            color = self.obtener_color_porcentaje(porcentaje)
+            
+            # Crear donut chart
+            sizes = [porcentaje, 100 - porcentaje]
+            colors = [color, '#1e1e1e']
+            
+            wedges, texts = ax.pie(sizes, colors=colors, startangle=90,
+                                   wedgeprops=dict(width=0.4, edgecolor='#2b2b2b', linewidth=2))
+            
+            # Texto en el centro
+            ax.text(0, 0.15, f'{porcentaje}%', ha='center', va='center',
+                   fontsize=20, fontweight='bold', color='white')
+            ax.text(0, -0.15, valor, ha='center', va='center',
+                   fontsize=10, color='gray')
+            
+            # Título
+            ax.set_title(titulo, fontsize=11, fontweight='bold', pad=10)
         
-        # Incrustar en tkinter
-        canvas = FigureCanvasTkAgg(fig, graficas_frame)
+        fig.tight_layout(pad=2)
+        
+        # Incrustar donuts
+        canvas = FigureCanvasTkAgg(fig, donuts_frame)
         canvas.draw()
-        canvas.get_tk_widget().pack(fill="both", expand=True)
+        canvas.get_tk_widget().pack(fill="x")
         
-        # Frame para estadísticas rápidas
-        stats_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="gray25", corner_radius=10)
-        stats_frame.pack(fill="x", padx=20, pady=(0, 15))
+        # Frame inferior: Progreso semanal
+        semana_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="transparent")
+        semana_frame.pack(fill="both", expand=True, padx=20, pady=(5, 10))
         
-        # Calcular promedios
-        promedio_sueno = sum(datos_semana["sueno"]) / len(datos_semana["sueno"]) if datos_semana["sueno"] else 0
-        promedio_agua = sum(datos_semana["agua"]) / len(datos_semana["agua"]) if datos_semana["agua"] else 0
-        promedio_estres = sum(datos_semana["estres"]) / len(datos_semana["estres"]) if datos_semana["estres"] else 0
-        total_estudio = sum(datos_semana["estudio"])
-        
-        # Mostrar estadísticas
-        stats_text = f"📊 Promedios de la semana:  💤 {promedio_sueno:.1f}h sueño  |  💧 {promedio_agua:.1f} vasos  |  😰 {promedio_estres:.1f}/10 estrés  |  📚 {total_estudio:.1f}h estudio total"
-        
-        label_stats = ctk.CTkLabel(
-            stats_frame,
-            text=stats_text,
-            font=ctk.CTkFont(size=12),
-            text_color="gray90"
+        # Título semana
+        titulo_semana = ctk.CTkLabel(
+            semana_frame,
+            text="📅 Tu Semana Completa",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
-        label_stats.pack(pady=10)
+        titulo_semana.pack(pady=(5, 5))
+        
+        # Obtener datos de la semana
+        datos_semana = self.obtener_datos_semana()
+        
+        if datos_semana["fechas"]:
+            # Crear gráfica de barras para la semana
+            fig2 = Figure(figsize=(11, 2.5), facecolor='#2b2b2b')
+            ax = fig2.add_subplot(111)
+            
+            # Preparar datos
+            dias = datos_semana["fechas_cortas"]
+            x = range(len(dias))
+            width = 0.2
+            
+            # Crear barras para cada métrica
+            ax.bar([i - 1.5*width for i in x], datos_semana["sueno"], width, 
+                  label='💤 Sueño', color='#3b82f6', alpha=0.8)
+            ax.bar([i - 0.5*width for i in x], datos_semana["agua"], width,
+                  label='💧 Agua', color='#10b981', alpha=0.8)
+            ax.bar([i + 0.5*width for i in x], [e/2 for e in datos_semana["estres"]], width,
+                  label='😰 Estrés', color='#ef4444', alpha=0.8)
+            ax.bar([i + 1.5*width for i in x], datos_semana["estudio"], width,
+                  label='📚 Estudio', color='#f59e0b', alpha=0.8)
+            
+            ax.set_xticks(x)
+            ax.set_xticklabels(dias)
+            ax.legend(loc='upper left', fontsize=9, ncol=4)
+            ax.set_ylabel('Valores', fontsize=10)
+            ax.grid(True, alpha=0.2, axis='y')
+            ax.set_ylim(0, 12)
+            
+            fig2.tight_layout()
+            
+            canvas2 = FigureCanvasTkAgg(fig2, semana_frame)
+            canvas2.draw()
+            canvas2.get_tk_widget().pack(fill="both", expand=True)
     
     def obtener_datos_semana(self):
         """Obtener datos de los últimos 7 días"""
