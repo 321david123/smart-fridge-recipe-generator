@@ -1,41 +1,40 @@
 #!/bin/bash
 
-# Smart Fridge Recipe Generator - Quick Start Script
+# Generador Inteligente de Recetas - Script de Inicio Rápido
 
-echo "🍳 Smart Fridge Recipe Generator"
-echo "================================"
+echo "🍳 Generador Inteligente de Recetas"
+echo "===================================="
 echo ""
 
-# Check if virtual environment exists
+# Verificar si existe el entorno virtual
 if [ ! -d "venv" ]; then
-    echo "📦 Creating virtual environment..."
+    echo "📦 Creando entorno virtual..."
     python3 -m venv venv
 fi
 
-# Activate virtual environment
-echo "🔧 Activating virtual environment..."
+# Activar entorno virtual
+echo "🔧 Activando entorno virtual..."
 source venv/bin/activate
 
-# Install/upgrade dependencies
-echo "📥 Installing dependencies..."
+# Instalar/actualizar dependencias
+echo "📥 Instalando dependencias..."
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
 
-# Check for API key
+# Verificar clave API
 if [ -z "$OPENAI_API_KEY" ]; then
     echo ""
-    echo "⚠️  Warning: OPENAI_API_KEY environment variable not set"
-    echo "You can either:"
-    echo "  1. Set it now: export OPENAI_API_KEY='your-key-here'"
-    echo "  2. Enter it in the app's sidebar when it starts"
+    echo "⚠️  Advertencia: Variable de entorno OPENAI_API_KEY no configurada"
+    echo "Puedes:"
+    echo "  1. Configurarla ahora: export OPENAI_API_KEY='tu-clave-aqui'"
+    echo "  2. Ingresarla en la barra lateral de la aplicación cuando inicie"
     echo ""
-    read -p "Press Enter to continue..."
+    read -p "Presiona Enter para continuar..."
 fi
 
-# Run the app
+# Ejecutar la aplicación
 echo ""
-echo "🚀 Starting the application..."
-echo "The app will open in your browser at http://localhost:8501"
+echo "🚀 Iniciando la aplicación..."
+echo "La aplicación se abrirá en tu navegador en http://localhost:8501"
 echo ""
 streamlit run app.py
-
