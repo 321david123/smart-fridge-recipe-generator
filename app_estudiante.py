@@ -3,12 +3,15 @@ from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import json
 import os
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from openai import OpenAI
 from dotenv import load_dotenv
 import base64
 from io import BytesIO
 import threading
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 # Cargar variables de entorno
 load_dotenv()
@@ -159,87 +162,231 @@ class AplicacionEstudiante(ctk.CTk):
         )
         btn_salir.pack(side="right", padx=30, pady=20)
         
-        # Frame principal con los 3 módulos
-        main_frame = ctk.CTkFrame(self, fg_color="transparent")
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        # Frame para tarjetas (arriba) - altura fija
+        cards_frame = ctk.CTkFrame(self, fg_color="transparent", height=280)
+        cards_frame.pack(fill="x", padx=20, pady=(10, 0))
+        cards_frame.pack_propagate(False)
         
         # Crear 3 tarjetas para los módulos
         # Módulo 1: Registro Diario
         card1 = self.crear_tarjeta_modulo(
-            main_frame,
+            cards_frame,
             "📊 Registro Diario",
             "Registra tu comida, sueño y bienestar",
             "#3b82f6",
             lambda: self.abrir_modulo_registro()
         )
-        card1.grid(row=0, column=0, padx=15, pady=15, sticky="nsew")
+        card1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         
         # Módulo 2: Generador de Recetas
         card2 = self.crear_tarjeta_modulo(
-            main_frame,
+            cards_frame,
             "🍳 Recetas Inteligentes",
             "Sube foto de tu refri y genera recetas",
             "#10b981",
             lambda: self.abrir_modulo_recetas()
         )
-        card2.grid(row=0, column=1, padx=15, pady=15, sticky="nsew")
+        card2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
         
         # Módulo 3: Asistente de Estudio
         card3 = self.crear_tarjeta_modulo(
-            main_frame,
+            cards_frame,
             "🧠 Asistente de Estudio",
             "Tips, motivación y ayuda académica",
             "#f59e0b",
             lambda: self.abrir_modulo_asistente()
         )
-        card3.grid(row=0, column=2, padx=15, pady=15, sticky="nsew")
+        card3.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
         
-        # Configurar grid
-        main_frame.grid_columnconfigure((0, 1, 2), weight=1, uniform="column")
-        main_frame.grid_rowconfigure(0, weight=1)
+        # Configurar grid para tarjetas
+        cards_frame.grid_columnconfigure((0, 1, 2), weight=1, uniform="column")
+        cards_frame.grid_rowconfigure(0, weight=1)
+        
+        # Frame para dashboard (abajo)
+        self.dashboard_frame = ctk.CTkFrame(self, corner_radius=15)
+        self.dashboard_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
+        
+        # Crear dashboard
+        self.crear_dashboard()
     
     def crear_tarjeta_modulo(self, parent, titulo, descripcion, color, comando):
-        """Crear tarjeta para cada módulo"""
+        """Crear tarjeta para cada módulo - versión compacta"""
         frame = ctk.CTkFrame(parent, corner_radius=15, fg_color=color)
         
         # Contenedor interno
         inner_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        inner_frame.pack(expand=True, fill="both", padx=30, pady=30)
+        inner_frame.pack(expand=True, fill="both", padx=20, pady=15)
         
         # Título
         label_titulo = ctk.CTkLabel(
             inner_frame,
             text=titulo,
-            font=ctk.CTkFont(size=24, weight="bold"),
-            wraplength=250
+            font=ctk.CTkFont(size=20, weight="bold"),
+            wraplength=200
         )
-        label_titulo.pack(pady=(20, 10))
+        label_titulo.pack(pady=(10, 5))
         
         # Descripción
         label_desc = ctk.CTkLabel(
             inner_frame,
             text=descripcion,
-            font=ctk.CTkFont(size=14),
-            wraplength=250,
+            font=ctk.CTkFont(size=12),
+            wraplength=200,
             text_color="gray90"
         )
-        label_desc.pack(pady=10)
+        label_desc.pack(pady=5)
         
         # Botón
         btn = ctk.CTkButton(
             inner_frame,
             text="Abrir",
             command=comando,
-            width=150,
-            height=45,
-            font=ctk.CTkFont(size=16, weight="bold"),
+            width=120,
+            height=35,
+            font=ctk.CTkFont(size=14, weight="bold"),
             fg_color="white",
             text_color=color,
             hover_color="gray90"
         )
-        btn.pack(pady=(30, 20))
+        btn.pack(pady=(10, 10))
         
         return frame
+    
+    def crear_dashboard(self):
+        """Crear dashboard con gráficas de la semana"""
+        # Limpiar dashboard
+        for widget in self.dashboard_frame.winfo_children():
+            widget.destroy()
+        
+        # Título del dashboard
+        titulo_dash = ctk.CTkLabel(
+            self.dashboard_frame,
+            text="📊 Tu Semana de Bienestar",
+            font=ctk.CTkFont(size=22, weight="bold")
+        )
+        titulo_dash.pack(pady=(15, 10))
+        
+        # Obtener datos de la última semana
+        datos_semana = self.obtener_datos_semana()
+        
+        if not datos_semana["fechas"]:
+            # No hay datos
+            label_sin_datos = ctk.CTkLabel(
+                self.dashboard_frame,
+                text="📝 Aún no tienes registros. ¡Empieza a registrar tu día!",
+                font=ctk.CTkFont(size=16),
+                text_color="gray"
+            )
+            label_sin_datos.pack(pady=50)
+            return
+        
+        # Frame para las gráficas
+        graficas_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="transparent")
+        graficas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 15))
+        
+        # Configurar matplotlib con tema oscuro
+        plt.style.use('dark_background')
+        
+        # Crear figura con 4 subplots
+        fig = Figure(figsize=(12, 4), facecolor='#2b2b2b')
+        
+        # 1. Gráfica de Sueño
+        ax1 = fig.add_subplot(141)
+        ax1.plot(datos_semana["fechas_cortas"], datos_semana["sueno"], 
+                marker='o', linewidth=2, markersize=8, color='#3b82f6')
+        ax1.set_title('💤 Sueño (horas)', fontsize=10, fontweight='bold')
+        ax1.set_ylim(0, 12)
+        ax1.grid(True, alpha=0.3)
+        ax1.tick_params(labelsize=8)
+        
+        # 2. Gráfica de Agua
+        ax2 = fig.add_subplot(142)
+        ax2.bar(datos_semana["fechas_cortas"], datos_semana["agua"], color='#10b981', alpha=0.8)
+        ax2.set_title('💧 Agua (vasos)', fontsize=10, fontweight='bold')
+        ax2.set_ylim(0, 12)
+        ax2.grid(True, alpha=0.3, axis='y')
+        ax2.tick_params(labelsize=8)
+        
+        # 3. Gráfica de Estrés
+        ax3 = fig.add_subplot(143)
+        colores_estres = ['#22c55e' if e <= 3 else '#f59e0b' if e <= 6 else '#ef4444' 
+                         for e in datos_semana["estres"]]
+        ax3.bar(datos_semana["fechas_cortas"], datos_semana["estres"], 
+               color=colores_estres, alpha=0.8)
+        ax3.set_title('😰 Estrés (1-10)', fontsize=10, fontweight='bold')
+        ax3.set_ylim(0, 10)
+        ax3.grid(True, alpha=0.3, axis='y')
+        ax3.tick_params(labelsize=8)
+        
+        # 4. Gráfica de Estudio
+        ax4 = fig.add_subplot(144)
+        ax4.plot(datos_semana["fechas_cortas"], datos_semana["estudio"], 
+                marker='s', linewidth=2, markersize=8, color='#f59e0b')
+        ax4.set_title('📚 Estudio (horas)', fontsize=10, fontweight='bold')
+        ax4.set_ylim(0, max(datos_semana["estudio"] + [8]))
+        ax4.grid(True, alpha=0.3)
+        ax4.tick_params(labelsize=8)
+        
+        fig.tight_layout()
+        
+        # Incrustar en tkinter
+        canvas = FigureCanvasTkAgg(fig, graficas_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+        
+        # Frame para estadísticas rápidas
+        stats_frame = ctk.CTkFrame(self.dashboard_frame, fg_color="gray25", corner_radius=10)
+        stats_frame.pack(fill="x", padx=20, pady=(0, 15))
+        
+        # Calcular promedios
+        promedio_sueno = sum(datos_semana["sueno"]) / len(datos_semana["sueno"]) if datos_semana["sueno"] else 0
+        promedio_agua = sum(datos_semana["agua"]) / len(datos_semana["agua"]) if datos_semana["agua"] else 0
+        promedio_estres = sum(datos_semana["estres"]) / len(datos_semana["estres"]) if datos_semana["estres"] else 0
+        total_estudio = sum(datos_semana["estudio"])
+        
+        # Mostrar estadísticas
+        stats_text = f"📊 Promedios de la semana:  💤 {promedio_sueno:.1f}h sueño  |  💧 {promedio_agua:.1f} vasos  |  😰 {promedio_estres:.1f}/10 estrés  |  📚 {total_estudio:.1f}h estudio total"
+        
+        label_stats = ctk.CTkLabel(
+            stats_frame,
+            text=stats_text,
+            font=ctk.CTkFont(size=12),
+            text_color="gray90"
+        )
+        label_stats.pack(pady=10)
+    
+    def obtener_datos_semana(self):
+        """Obtener datos de los últimos 7 días"""
+        datos = {
+            "fechas": [],
+            "fechas_cortas": [],
+            "sueno": [],
+            "agua": [],
+            "estres": [],
+            "estudio": []
+        }
+        
+        # Últimos 7 días
+        hoy = date.today()
+        for i in range(6, -1, -1):
+            fecha = hoy - timedelta(days=i)
+            fecha_str = fecha.isoformat()
+            
+            if self.nombre_usuario in self.datos_usuario:
+                registro = self.datos_usuario[self.nombre_usuario]["registros_diarios"].get(fecha_str, {})
+                
+                if registro:  # Solo agregar si hay datos
+                    datos["fechas"].append(fecha)
+                    # Formato corto: Lun, Mar, etc.
+                    dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+                    datos["fechas_cortas"].append(dias_semana[fecha.weekday()])
+                    
+                    datos["sueno"].append(float(registro.get("sueno", 0) or 0))
+                    datos["agua"].append(float(registro.get("agua", 0) or 0))
+                    datos["estres"].append(int(registro.get("estres", 5)))
+                    datos["estudio"].append(float(registro.get("estudio", 0) or 0))
+        
+        return datos
     
     def abrir_modulo_registro(self):
         """Módulo de registro diario"""
@@ -358,13 +505,20 @@ class AplicacionEstudiante(ctk.CTk):
                 "notas": entry_notas.get("1.0", "end-1c")
             }
             self.guardar_datos()
-            messagebox.showinfo("Guardado", "¡Registro guardado exitosamente!")
+            
+            # Actualizar dashboard
+            self.crear_dashboard()
+            
+            # Cerrar ventana
+            ventana.destroy()
+            
+            messagebox.showinfo("Guardado", "¡Registro guardado! Dashboard actualizado.")
         
         btn_guardar = ctk.CTkButton(
             scroll_frame,
-            text="💾 Guardar Registro",
+            text="💾 Guardar y Actualizar Dashboard",
             command=guardar_registro,
-            width=250,
+            width=300,
             height=50,
             font=ctk.CTkFont(size=16, weight="bold")
         )
