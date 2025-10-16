@@ -36,7 +36,7 @@ def analizar_imagen_para_ingredientes(cliente, imagen):
     imagen_base64 = codificar_imagen(imagen)
     
     try:
-        respuesta = cliente.chat.completions.create(
+        stream = cliente.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {
@@ -59,17 +59,18 @@ def analizar_imagen_para_ingredientes(cliente, imagen):
                     ]
                 }
             ],
-            max_tokens=500
+            max_tokens=500,
+            stream=True
         )
-        return respuesta.choices[0].message.content
+        return stream
     except Exception as error:
         st.error(f"Error al analizar imagen: {str(error)}")
         return None
 
 def generar_recetas(cliente, ingredientes):
-    """Generar recetas basadas en ingredientes disponibles"""
+    """Generar recetas basadas en ingredientes disponibles con streaming"""
     try:
-        respuesta = cliente.chat.completions.create(
+        stream = cliente.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {
@@ -91,17 +92,18 @@ Por favor sugiere 3 recetas que se puedan hacer con estos ingredientes. Para cad
 Formatea cada receta claramente con encabezados y hazla fácil de seguir."""
                 }
             ],
-            max_tokens=1500
+            max_tokens=1500,
+            stream=True
         )
-        return respuesta.choices[0].message.content
+        return stream
     except Exception as error:
         st.error(f"Error al generar recetas: {str(error)}")
         return None
 
 def sugerir_ingredientes_adicionales(cliente, ingredientes_actuales):
-    """Sugerir ingredientes para comprar para más variedad de recetas"""
+    """Sugerir ingredientes para comprar para más variedad de recetas con streaming"""
     try:
-        respuesta = cliente.chat.completions.create(
+        stream = cliente.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {
@@ -123,9 +125,10 @@ Sugiere 5-7 ingredientes adicionales que:
 Para cada sugerencia, explica brevemente (en 1 oración) por qué es útil."""
                 }
             ],
-            max_tokens=800
+            max_tokens=800,
+            stream=True
         )
-        return respuesta.choices[0].message.content
+        return stream
     except Exception as error:
         st.error(f"Error al sugerir ingredientes: {str(error)}")
         return None
@@ -172,26 +175,71 @@ def main():
         # Mostrar la imagen subida
         imagen = Image.open(archivo_subido)
         
-        col1, col2 = st.columns([1, 1])
+        st.subheader("📸 Tu Imagen")
+        st.image(imagen, use_column_width=True)
         
-        with col1:
-            st.subheader("Tu Imagen")
-            st.image(imagen, use_column_width=True)
+        # Crear un identificador único para esta imagen
+        id_imagen = hash(archivo_subido.name + str(archivo_subido.size))
         
-        with col2:
-            st.subheader("🔍 Análisis")
+        # Verificar si ya procesamos esta imagen
+        if 'id_imagen_procesada' not in st.session_state or st.session_state.id_imagen_procesada != id_imagen:
+            # Nueva imagen - procesar automáticamente
+            st.session_state.id_imagen_procesada = id_imagen
+            st.session_state.ingredientes = ""
+            st.session_state.recetas = ""
+            st.session_state.sugerencias = ""
             
-            # Botón para analizar
-            if st.button("🔍 Analizar Ingredientes", type="primary"):
-                with st.spinner("Analizando tus ingredientes..."):
-                    ingredientes = analizar_imagen_para_ingredientes(cliente, imagen)
+            # PASO 1: Analizar ingredientes
+            st.markdown("---")
+            st.header("🔍 Analizando Ingredientes...")
+            contenedor_ingredientes = st.empty()
+            texto_completo_ingredientes = ""
+            
+            stream_ingredientes = analizar_imagen_para_ingredientes(cliente, imagen)
+            if stream_ingredientes:
+                for chunk in stream_ingredientes:
+                    if chunk.choices[0].delta.content:
+                        texto_completo_ingredientes += chunk.choices[0].delta.content
+                        contenedor_ingredientes.markdown(texto_completo_ingredientes)
+                
+                st.session_state.ingredientes = texto_completo_ingredientes
+                st.success("✅ ¡Ingredientes identificados!")
+            
+            # PASO 2: Generar recetas
+            if st.session_state.ingredientes:
+                st.markdown("---")
+                st.header("👨‍🍳 Generando Recetas...")
+                contenedor_recetas = st.empty()
+                texto_completo_recetas = ""
+                
+                stream_recetas = generar_recetas(cliente, st.session_state.ingredientes)
+                if stream_recetas:
+                    for chunk in stream_recetas:
+                        if chunk.choices[0].delta.content:
+                            texto_completo_recetas += chunk.choices[0].delta.content
+                            contenedor_recetas.markdown(texto_completo_recetas)
                     
-                    if ingredientes:
-                        st.session_state.ingredientes = ingredientes
-                        st.success("✅ ¡Análisis completo!")
+                    st.session_state.recetas = texto_completo_recetas
+                    st.success("✅ ¡Recetas creadas!")
+                
+                # PASO 3: Sugerir ingredientes adicionales
+                st.markdown("---")
+                st.header("🛒 Sugiriendo Ingredientes para Comprar...")
+                contenedor_sugerencias = st.empty()
+                texto_completo_sugerencias = ""
+                
+                stream_sugerencias = sugerir_ingredientes_adicionales(cliente, st.session_state.ingredientes)
+                if stream_sugerencias:
+                    for chunk in stream_sugerencias:
+                        if chunk.choices[0].delta.content:
+                            texto_completo_sugerencias += chunk.choices[0].delta.content
+                            contenedor_sugerencias.markdown(texto_completo_sugerencias)
+                    
+                    st.session_state.sugerencias = texto_completo_sugerencias
+                    st.success("✅ ¡Sugerencias listas!")
         
-        # Mostrar ingredientes si fueron analizados
-        if 'ingredientes' in st.session_state:
+        # Mostrar resultados guardados
+        if st.session_state.get('ingredientes'):
             st.markdown("---")
             st.header("🥗 Ingredientes Detectados")
             st.markdown(st.session_state.ingredientes)
@@ -203,42 +251,22 @@ def main():
                     value=st.session_state.ingredientes,
                     height=150
                 )
-                if st.button("Actualizar Ingredientes"):
+                if st.button("Actualizar y Regenerar Todo"):
                     st.session_state.ingredientes = ingredientes_editados
-                    st.success("✅ ¡Ingredientes actualizados!")
+                    # Limpiar el ID para forzar regeneración
+                    st.session_state.id_imagen_procesada = None
+                    st.success("✅ ¡Regenerando con ingredientes actualizados!")
                     st.rerun()
-            
-            # Dos columnas para recetas y sugerencias
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                st.markdown("---")
-                st.header("👨‍🍳 Sugerencias de Recetas")
-                if st.button("Generar Recetas", type="primary"):
-                    with st.spinner("Creando recetas deliciosas para ti..."):
-                        recetas = generar_recetas(cliente, st.session_state.ingredientes)
-                        if recetas:
-                            st.session_state.recetas = recetas
-            
-            with col2:
-                st.markdown("---")
-                st.header("🛒 Sugerencias de Compras")
-                if st.button("Obtener Ideas de Compras", type="primary"):
-                    with st.spinner("Encontrando excelentes sugerencias de ingredientes..."):
-                        sugerencias = sugerir_ingredientes_adicionales(cliente, st.session_state.ingredientes)
-                        if sugerencias:
-                            st.session_state.sugerencias = sugerencias
-            
-            # Mostrar resultados
-            if 'recetas' in st.session_state:
-                st.markdown("---")
-                st.subheader("📖 Tus Recetas")
-                st.markdown(st.session_state.recetas)
-            
-            if 'sugerencias' in st.session_state:
-                st.markdown("---")
-                st.subheader("💡 Ingredientes Sugeridos para Comprar")
-                st.markdown(st.session_state.sugerencias)
+        
+        if st.session_state.get('recetas'):
+            st.markdown("---")
+            st.header("📖 Tus Recetas")
+            st.markdown(st.session_state.recetas)
+        
+        if st.session_state.get('sugerencias'):
+            st.markdown("---")
+            st.header("💡 Ingredientes Sugeridos para Comprar")
+            st.markdown(st.session_state.sugerencias)
 
 if __name__ == "__main__":
     main()
