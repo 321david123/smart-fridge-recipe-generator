@@ -1,29 +1,45 @@
-# 🍳 Generador Inteligente de Recetas
+# 🎓 Student Life - Tu Asistente Personal Estudiantil
 
-Una aplicación potenciada por IA que analiza fotos de tu refrigerador o ingredientes y te ayuda a:
-- 📸 Identificar ingredientes usando visión por computadora
-- 👨‍🍳 Generar recetas creativas basadas en lo que tienes
-- 🛒 Sugerir ingredientes adicionales para expandir tus posibilidades culinarias
+Una aplicación de escritorio moderna potenciada por IA que ayuda a estudiantes a:
+- 📊 Registrar su bienestar diario (sueño, comida, ejercicio, estrés)
+- 🍳 Generar recetas inteligentes desde fotos de su refrigerador
+- 🧠 Obtener ayuda académica, motivación y consejos de productividad
 
-## Características
+## ✨ Características
 
-- **Carga y Análisis de Imágenes**: Sube fotos de tu refrigerador o ingredientes
-- **Reconocimiento con IA Vision**: Usa GPT-4 Vision para identificar alimentos con precisión
-- **Generación de Recetas**: Obtén 3 sugerencias de recetas personalizadas con instrucciones paso a paso
-- **Sugerencias de Compras**: La IA recomienda ingredientes complementarios para comprar
-- **Interfaz Interactiva**: Interfaz web limpia y fácil de usar con Streamlit
-- **Resultados Editables**: Ajusta manualmente la lista de ingredientes detectados si es necesario
+### 1. 📊 Registro Diario de Bienestar
+- Registro de horas de sueño
+- Control de comidas y vasos de agua
+- Seguimiento de ejercicio
+- Medición de niveles de estrés
+- Horas de estudio
+- Notas personales del día
 
-## Requisitos Previos
+### 2. 🍳 Generador Inteligente de Recetas
+- Sube fotos de tu refrigerador
+- IA identifica ingredientes automáticamente
+- Genera recetas fáciles para estudiantes
+- Todo automático con streaming en tiempo real
+
+### 3. 🧠 Asistente de Estudio
+- Técnicas de estudio efectivas
+- Mensajes motivacionales
+- Manejo de estrés académico
+- Consejos de organización y productividad
+- Pregunta lo que quieras al asistente IA
+
+## 🚀 Instalación y Uso
+
+### Requisitos Previos
 
 - Python 3.8 o superior
 - Clave API de OpenAI (con acceso a modelos GPT-4o/Vision)
 
-## 🚀 Instalación y Uso
+---
 
-### Para Usuarios de Windows:
+### Para Windows:
 
-1. **Descarga o clona este proyecto**:
+1. **Clona o descarga el proyecto**:
    ```bash
    git clone https://github.com/321david123/smart-fridge-recipe-generator.git
    cd smart-fridge-recipe-generator
@@ -36,68 +52,21 @@ Una aplicación potenciada por IA que analiza fotos de tu refrigerador o ingredi
 
 3. **Configura tu clave API de OpenAI**:
    
-   Opción A: Variable de entorno (recomendado):
-   ```bash
-   set OPENAI_API_KEY=tu-clave-api-aqui
+   Crea un archivo `.env` en la carpeta del proyecto:
    ```
-   
-   Opción B: Ingrésala en la barra lateral de la aplicación cuando la ejecutes
-
-4. **Inicia la aplicación**:
-   ```bash
-   streamlit run app.py
-   ```
-   
-   O usa el script de inicio rápido:
-   ```bash
-   run.bat
+   OPENAI_API_KEY=tu-clave-api-aqui
    ```
 
-5. **Abre tu navegador**:
-   - La aplicación se abrirá automáticamente en `http://localhost:8501`
+4. **Ejecuta la aplicación**:
+   ```bash
+   python app_estudiante.py
+   ```
 
 ---
 
-### Para Usuarios de Mac:
+### Para Mac:
 
-1. **Descarga o clona este proyecto**:
-   ```bash
-   git clone https://github.com/321david123/smart-fridge-recipe-generator.git
-   cd smart-fridge-recipe-generator
-   ```
-
-2. **Instala las dependencias**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configura tu clave API de OpenAI**:
-   
-   Opción A: Variable de entorno (recomendado):
-   ```bash
-   export OPENAI_API_KEY='tu-clave-api-aqui'
-   ```
-   
-   Opción B: Ingrésala en la barra lateral de la aplicación cuando la ejecutes
-
-4. **Inicia la aplicación**:
-   ```bash
-   streamlit run app.py
-   ```
-   
-   O usa el script de inicio rápido:
-   ```bash
-   ./run.sh
-   ```
-
-5. **Abre tu navegador**:
-   - La aplicación se abrirá automáticamente en `http://localhost:8501`
-
----
-
-### Para Usuarios de Linux:
-
-1. **Descarga o clona este proyecto**:
+1. **Clona o descarga el proyecto**:
    ```bash
    git clone https://github.com/321david123/smart-fridge-recipe-generator.git
    cd smart-fridge-recipe-generator
@@ -110,97 +79,143 @@ Una aplicación potenciada por IA que analiza fotos de tu refrigerador o ingredi
 
 3. **Configura tu clave API de OpenAI**:
    
-   Opción A: Variable de entorno (recomendado):
+   Crea un archivo `.env` en la carpeta del proyecto:
    ```bash
-   export OPENAI_API_KEY='tu-clave-api-aqui'
-   ```
-   
-   Opción B: Ingrésala en la barra lateral de la aplicación cuando la ejecutes
-
-4. **Inicia la aplicación**:
-   ```bash
-   streamlit run app.py
-   ```
-   
-   O usa el script de inicio rápido:
-   ```bash
-   ./run.sh
+   echo "OPENAI_API_KEY=tu-clave-api-aqui" > .env
    ```
 
-5. **Abre tu navegador**:
-   - La aplicación se abrirá automáticamente en `http://localhost:8501`
+4. **Ejecuta la aplicación**:
+   ```bash
+   python3 app_estudiante.py
+   ```
 
 ---
 
-## 📖 Cómo Usar la Aplicación
+### Para Linux:
 
-1. **Sube una foto** de tu refrigerador o ingredientes
-2. **Haz clic en "Analizar Ingredientes"** para detectar lo que tienes
-3. **Revisa y edita** la lista de ingredientes si es necesario
-4. **Haz clic en "Generar Recetas"** para obtener ideas de cocina
-5. **Haz clic en "Obtener Ideas de Compras"** para sugerencias de ingredientes
+1. **Clona o descarga el proyecto**:
+   ```bash
+   git clone https://github.com/321david123/smart-fridge-recipe-generator.git
+   cd smart-fridge-recipe-generator
+   ```
+
+2. **Instala las dependencias**:
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+
+3. **Configura tu clave API de OpenAI**:
+   
+   Crea un archivo `.env` en la carpeta del proyecto:
+   ```bash
+   echo "OPENAI_API_KEY=tu-clave-api-aqui" > .env
+   ```
+
+4. **Ejecuta la aplicación**:
+   ```bash
+   python3 app_estudiante.py
+   ```
+
+---
+
+## 🎮 Cómo Usar la Aplicación
+
+### Primera Vez:
+1. **Ingresa tu nombre** en la pantalla de bienvenida
+2. Verás el **dashboard principal** con 3 módulos
+
+### Módulo 1: Registro Diario 📊
+1. Haz clic en "📊 Registro Diario"
+2. Llena los campos:
+   - Horas de sueño
+   - Comidas del día
+   - Vasos de agua
+   - Minutos de ejercicio
+   - Nivel de estrés (1-10)
+   - Horas de estudio
+   - Notas del día
+3. Haz clic en "💾 Guardar Registro"
+4. ¡Tus datos se guardan localmente!
+
+### Módulo 2: Generador de Recetas 🍳
+1. Haz clic en "🍳 Recetas Inteligentes"
+2. Haz clic en "📸 Subir Foto del Refrigerador"
+3. Selecciona una imagen
+4. **Automáticamente:**
+   - La IA analiza los ingredientes
+   - Genera recetas deliciosas
+   - Todo en tiempo real
+
+### Módulo 3: Asistente de Estudio 🧠
+1. Haz clic en "🧠 Asistente de Estudio"
+2. Elige una opción:
+   - 📚 Técnicas de Estudio
+   - 💪 Motivación y Ánimo
+   - 😌 Manejo de Estrés
+   - 📅 Organización y Productividad
+   - 💬 Hacer una Pregunta
+3. ¡Recibe consejos personalizados de IA!
 
 ## 🔑 Obtener tu Clave API de OpenAI
 
 1. Ve a: https://platform.openai.com/api-keys
 2. Inicia sesión o crea una cuenta
 3. Haz clic en "Create new secret key"
-4. Copia la clave y úsala en la aplicación
+4. Copia la clave y agrégala al archivo `.env`
 
-**Nota**: Necesitas una cuenta verificada con acceso a GPT-4o Vision. La aplicación cuesta aproximadamente $0.03-0.05 por sesión completa (análisis de imagen + recetas + sugerencias).
+**Nota**: Necesitas una cuenta verificada con acceso a GPT-4o Vision.
 
-## ⚙️ Cómo Funciona
+## 💾 Almacenamiento de Datos
 
-1. **Análisis de Imagen**: La aplicación usa el modelo GPT-4o Vision de OpenAI para analizar tu imagen subida e identificar ingredientes visibles
-
-2. **Generación de Recetas**: Basándose en los ingredientes detectados, la IA genera recetas prácticas que realmente puedes hacer con lo que tienes
-
-3. **Sugerencias Inteligentes**: La IA analiza tu inventario actual y sugiere ingredientes complementarios que desbloquearían muchas más posibilidades de recetas
-
-## 💡 Consejos para Mejores Resultados
-
-- 📸 Toma fotos claras y bien iluminadas
-- 🏷️ Asegúrate de que las etiquetas de los ingredientes sean visibles cuando sea posible
-- 🔍 Acércate a secciones específicas si tu refrigerador está lleno
-- ✏️ Edita la lista de ingredientes para agregar elementos que la IA podría haber pasado por alto
+- Todos tus datos se guardan **localmente** en `datos_estudiante.json`
+- **No se envía información personal** a ningún servidor
+- Solo las imágenes y preguntas se envían a OpenAI para análisis
+- Puedes borrar `datos_estudiante.json` para empezar de nuevo
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Streamlit**: Framework de interfaz web
-- **OpenAI GPT-4o**: Visión y generación de texto
+- **CustomTkinter**: Interfaz moderna y hermosa
+- **OpenAI GPT-4o**: IA para análisis de imágenes y generación de contenido
 - **Pillow**: Procesamiento de imágenes
-- **Python**: Lenguaje de programación principal
+- **Python 3**: Lenguaje de programación
 
 ## 💰 Consideraciones de Costo
 
-Esta aplicación usa la API de OpenAI que incurre en costos:
-- GPT-4o Vision: ~$0.01-0.02 por análisis de imagen
-- GPT-4o Texto: ~$0.005-0.01 por generación de recetas/sugerencias
+Esta aplicación usa la API de OpenAI que tiene los siguientes costos aproximados:
+- Análisis de imagen: ~$0.01-0.02 por foto
+- Generación de recetas: ~$0.005-0.01
+- Consejos del asistente: ~$0.003-0.008
 
-Una sesión típica (1 imagen + recetas + sugerencias) cuesta aproximadamente $0.03-0.05.
+Uso típico: $0.02-0.05 por sesión completa.
 
 ## 🐛 Solución de Problemas
 
-**Error: "Por favor configura tu clave de API de OpenAI"**
-- Asegúrate de haber configurado la clave API como variable de entorno o ingrésala en la barra lateral
+**La aplicación no abre**
+- Verifica que Python esté instalado: `python --version`
+- Reinstala dependencias: `pip install -r requirements.txt`
 
-**El análisis de imagen no funciona**
-- Asegúrate de que tu imagen esté en formato PNG, JPG o JPEG
-- Verifica que tu clave API de OpenAI tenga acceso a modelos GPT-4o Vision
-- Intenta con una imagen más clara o más pequeña
+**Error de clave API**
+- Verifica que el archivo `.env` exista en la carpeta del proyecto
+- Asegúrate de que la clave API sea válida
+- Formato correcto: `OPENAI_API_KEY=sk-...`
 
-**Las recetas parecen genéricas**
-- Edita la lista de ingredientes para ser más específico
-- Agrega más detalles sobre cantidades o variedades
+**Error al analizar imágenes**
+- Verifica que tu cuenta de OpenAI tenga acceso a GPT-4o Vision
+- Usa imágenes en formato PNG, JPG o JPEG
+- Intenta con una imagen más pequeña
 
-## 🌟 Mejoras Futuras
+**La interfaz se ve mal**
+- Actualiza CustomTkinter: `pip install --upgrade customtkinter`
+- Cierra y vuelve a abrir la aplicación
 
-- [ ] Soporte para múltiples imágenes a la vez
-- [ ] Filtros de restricciones dietéticas (vegetariano, vegano, sin gluten, etc.)
-- [ ] Información de calorías y nutrición
-- [ ] Guardar recetas favoritas
-- [ ] Exportar listas de compras
-- [ ] Integración con servicios de entrega de comestibles
+## 🌟 Características Próximamente
+
+- [ ] Gráficas de progreso y estadísticas
+- [ ] Recordatorios y alarmas
+- [ ] Modo claro/oscuro personalizable
+- [ ] Exportar datos a PDF
+- [ ] Temporizador Pomodoro integrado
+- [ ] Calendario de tareas
 
 ## 📄 Licencia
 
@@ -212,4 +227,17 @@ Este proyecto es de código abierto y está disponible para uso personal y educa
 
 ---
 
-Hecho con ❤️ usando Python, Streamlit y OpenAI
+## 🎨 Capturas de Pantalla
+
+La aplicación cuenta con:
+- ✨ Interfaz moderna con tema oscuro
+- 🎯 Diseño intuitivo y fácil de usar
+- 🚀 Animaciones suaves
+- 📱 Organización clara por módulos
+- 💜 Colores vibrantes y atractivos
+
+---
+
+**Hecho con ❤️ para estudiantes que quieren una vida más equilibrada**
+
+Desarrollado usando Python, CustomTkinter y OpenAI GPT-4o
